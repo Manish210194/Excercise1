@@ -41,4 +41,6 @@ public class TaskResource {
             return Response.serverError().entity("Error fetching tasks from the database.").build();
         }
     }
+
+    
 }

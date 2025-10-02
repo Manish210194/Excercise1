@@ -18,6 +18,60 @@ public class TaskRepository {
     @Resource(name = "TaskDB")
     private DataSource dataSource;
 
+        /**
+         * Returns the total number of completed and pending tasks.
+         * @return int[]{completedCount, pendingCount}
+         */
+        public int[] getTaskCounts() {
+            String sql = "SELECT completed, COUNT(*) as cnt FROM tasks GROUP BY completed";
+            int completedCount = 0;
+            int pendingCount = 0;
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    boolean completed = rs.getBoolean("completed");
+                    int count = rs.getInt("cnt");
+                    if (completed) {
+                        completedCount = count;
+                    } else {
+                        pendingCount = count;
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return new int[]{completedCount, pendingCount};
+        }
+
+        /**
+         * Inserts a new row into the task_summaries table with the given counts and returns the generated summary ID.
+         * @param completedCount Number of completed tasks
+         * @param pendingCount Number of pending tasks
+         * @param totalTasks Total number of tasks
+         * @return long ID of the inserted summary row, or -1 if failed
+         */
+        public long insertTaskSummary(int completedCount, int pendingCount, int totalTasks) {
+            String sql = "INSERT INTO task_summaries (completed_count, pending_count, total_tasks, generated_at) VALUES (?, ?, ?, NOW())";
+            long generatedId = -1;
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                stmt.setInt(1, completedCount);
+                stmt.setInt(2, pendingCount);
+                stmt.setInt(3, totalTasks);
+                int affectedRows = stmt.executeUpdate();
+                if (affectedRows > 0) {
+                    try (ResultSet rs = stmt.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            generatedId = rs.getLong(1);
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return generatedId;
+        }
     // public Optional<Task> findById(Long id) {
     //     Task task = null;
     //     String sql = "SELECT id, title, description, completed FROM tasks WHERE id = ?";
@@ -117,4 +171,8 @@ public class TaskRepository {
         }
         return tasks;
     }
+
+
+
+
 }

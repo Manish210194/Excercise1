@@ -8,11 +8,22 @@ CREATE TABLE tasks (
     completed BOOLEAN DEFAULT FALSE
 );
 
+
+
+ CREATE TABLE task_summaries(
+    id BIGINT AUTO_INCREMENT PRIMARY,
+    completed_count INT (5),
+    pending_count INT (5),
+    total_tasks INT(5),
+    generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+ );
+
+
 -- New table for auditing
 CREATE TABLE audit_log (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     action_type VARCHAR(50) NOT NULL,
-    action_details VARCHAR(100) NOT NULL, -- The bug is here: the column is too small
+    action_details VARCHAR(200) NOT NULL, -- The bug is here: the column is too small
     log_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
